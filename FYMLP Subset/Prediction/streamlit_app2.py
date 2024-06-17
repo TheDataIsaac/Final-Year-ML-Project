@@ -210,12 +210,12 @@ class SuperconductorPredictor:
     def create_result_dataframe(self, ensemble_pred):
         result_df = pd.DataFrame({
             "composition": self.final_ef_ftd["_Composition"],
-            "Tc": self.final_ef_ftd["Critical Temp"],
+            "Actual Tc": self.final_ef_ftd["Critical Temp"],
             "prediction": ensemble_pred
         })
+
         result_df = result_df[result_df["prediction"] == 1]
         self.result_df = result_df.copy()
-        print(result_df.index)
         
         return result_df
 
@@ -228,7 +228,7 @@ uploaded_file = st.file_uploader("Upload your input CSV file", type=["csv"])
 
 if uploaded_file is not None:
     # User input for number of samples
-    num_samples = st.number_input("Enter number of samples to load", min_value=1, max_value=1000, value=100)
+    num_samples = st.number_input("Enter number of samples to load", min_value=1, max_value=16000, value=10000)
     
     # Initialize the components
     data_loader = DataLoader(uploaded_file, num_samples)
@@ -240,9 +240,11 @@ if uploaded_file is not None:
     ensemble_pred, ep_y, efep_y, ef_y = predictor.ensemble_predict()
     ensemble_eval = predictor.evaluate_ensemble("C", ep_y, ensemble_pred)
     result_dataframe = predictor.create_result_dataframe(ensemble_pred)
+    print(result_dataframe.columns)
 
     efep_pred, efep_y = predictor.reg_predict(result_dataframe)
     reg_eval = predictor.evaluate_ensemble("R", efep_y, efep_pred)
+    result_dataframe["Predicted Tc"] = efep_pred
 
     # Display classification results
     st.subheader("Ensemble Classification Results")
